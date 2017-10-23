@@ -1,18 +1,29 @@
-export type VDom = (node: keyof HTMLElementTagNameMap, params?: any, vdom?: HTMLElement | string) => HTMLElement
+export type ViableNode = HTMLElement | string | number
+export type VDom = (node: keyof HTMLElementTagNameMap, params?: any, vdom?: ViableNode | ViableNode[]) => HTMLElement
 export type Update<S> = (params: S) => any
 export type View<S> = (state: S, update: Update<S>) => HTMLElement
 export type State = Record<string, any>
+
+const appendChild = (elm: HTMLElement) => (children: ViableNode) => {
+  if (typeof children === 'string' || typeof children === 'number') {
+    const span = document.createElement('span')
+    span.innerHTML = children.toString()
+    elm.appendChild(span)
+  } else {
+    elm.appendChild(children)
+  }
+}
 
 export const h: VDom = (node, params, children) => {
   const elm = document.createElement(node)
   if (params) {
     Object.keys(params).forEach(key => elm[key] = params[key])
   }
-  if (children) {
-    if (typeof children === 'string') {
-      elm.innerHTML = children
+  if (children !== undefined && children !== null) {
+    if (children instanceof Array) {
+      children.map(appendChild(elm))
     } else {
-      elm.appendChild(children)
+      appendChild(elm)(children)
     }
   }
   return elm

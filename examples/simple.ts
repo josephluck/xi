@@ -1,4 +1,4 @@
-import { View, h } from '../lib'
+import { View, h } from '../src'
 
 export type MyState = {
   title: string
