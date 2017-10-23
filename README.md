@@ -15,7 +15,7 @@ Pion has only a few concepts:
 Views render HTML elements to the page:
 
 ```javascript
-h('div', { id: 'pion-app', () => 'Pion is super small!' }) // --> <div id='pion-app'>Pion is super small</div> 
+h('div', { id: 'pion-app', 'Pion is super small!' }) // --> <div id='pion-app'>Pion is super small</div> 
 ```
 
 ### State
@@ -25,8 +25,7 @@ State is a single global state atom, a'la Redux and friends. You can update stat
 ```javascript
 function view (state = { title: 'Pion is cool' }, update) {
   const updateTitle = () => update({title: 'Pion is AWESOME'})
-  const renderTitle = () => state.title
-  return h('div', { onclick: updateTitle }, renderTitle)
+  return h('div', { onclick: updateTitle }, state.title)
 }
 ```
 
