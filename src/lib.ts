@@ -18,8 +18,8 @@ export const h: VDom = (node, params, children) => {
   return elm
 }
 
-export function run<S>(selector: string, v: View<S>) {
-  const node = document.querySelector(selector)
+export function run<S>(elm: string | HTMLElement, v: View<S>) {
+  const node = typeof elm === 'string' ? document.querySelector(elm) : elm
   let state
   let oldVNode
   const update = (newState: S) => {

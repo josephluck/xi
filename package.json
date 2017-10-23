@@ -13,7 +13,7 @@
   },
   "author": "Joseph Luck",
   "scripts": {
-    "start": "budo ./src/example.ts --live --pushstate --host=localhost --port=8888 --base=/ -- -p tsify"
+    "start": "budo ./src/examples.ts --live --pushstate --host=localhost --port=8888 --base=/ -- -p tsify"
   },
   "dependencies": {
     "budo": "^10.0.4",

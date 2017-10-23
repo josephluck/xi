@@ -1,6 +1,6 @@
-import { View, run, h } from './lib'
+import { View, h } from '../lib'
 
-type MyState = {
+export type MyState = {
   title: string
 }
 
@@ -16,4 +16,4 @@ const view: View<MyState> = (state = defaultState, update) => {
   }, state.title)
 }
 
-run('body', view)
+export default view
