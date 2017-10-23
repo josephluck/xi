@@ -1,0 +1,24 @@
+{
+  "name": "pion",
+  "version": "0.0.0",
+  "description": "Minimum viable framework",
+  "main": "lib/index.js",
+  "files": [
+    "src/",
+    "lib/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josephluck/helix"
+  },
+  "author": "Joseph Luck",
+  "scripts": {
+    "start": "budo ./src/example.ts --live --pushstate --host=localhost --port=8888 --base=/ -- -p tsify"
+  },
+  "dependencies": {
+    "budo": "^10.0.4",
+    "ts-node": "^3.3.0",
+    "tsify": "^3.0.3",
+    "typescript": "^2.5.3"
+  }
+}
