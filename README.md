@@ -1,10 +1,10 @@
-# Pion
+# ‎π
 
 A minimum viable front-end framework
 
 ## Why?
 
-Don't use this :-) It's really just an indulgent idea of how small a UI framework can be. It's extremely slow and good for... well, nothing much of anything.
+Don't use this :-) It's really just an indulgent idea of how small a UI framework can be. It's extremely slow and good for... well, nothing much of anything really.
 
 ## Overview
 
@@ -20,7 +20,7 @@ h('div', { id: 'pion-app', 'Pion is super small!' }) // --> <div id='pion-app'>P
 
 ### State
 
-State is a single global state atom, a'la Redux and friends. You can update state with the convenient `updateState` function.
+State is a single global state atom, a'la Redux and friends. You can update state with the convenient `updateState` function passed in to all views.
 
 ```javascript
 function view (state = { title: 'Pion is cool' }, update) {
@@ -35,7 +35,7 @@ There aren't any stateful components in Pion. However, if you want reusable bits
 
 ## Example Usage
 
-See `src/client.ts`
+See the `examples` folder for a few ideas.
 
 ## Performance
 
