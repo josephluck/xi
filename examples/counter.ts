@@ -22,6 +22,7 @@ const view: View<MyState> = (state = defaultState, update) => {
       button('decrement', decrement),
       h('span', { id: state.count }, [state.count]),
       button('increment', increment),
+      null
     ])
   ])
 }

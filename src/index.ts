@@ -1,3 +1,5 @@
+import * as attributes from './attributes'
+
 export interface VNode {
   type: keyof HTMLElementTagNameMap
   props?: any
@@ -8,142 +10,56 @@ export type Update<S> = (newState: S) => any
 export type View<S> = (state: S, update: Update<S>) => ValidVNode
 export type State = Record<string, any>
 
-function isEventProp(name: string): boolean {
-  return /^on/.test(name)
-}
-
-function extractEventName(name: string): string {
-  return name.slice(2).toLowerCase()
-}
-
-function addEventListener($el: HTMLElement, name: string, prop: any) {
-  if (isEventProp(name)) {
-    $el.addEventListener(extractEventName(name), prop)
-  }
-}
-
-function addEventListeners($el: HTMLElement, props: any) {
-  Object.keys(props).forEach(key => addEventListener($el, key, props[key]))
-}
-
-function removeEventListener($el: HTMLElement, name: string, prop: any) {
-  if (isEventProp(name)) {
-    $el.removeEventListener(extractEventName(name), prop)
-  }
-}
-
-function updateEventListener($el: HTMLElement, name: string, oldProp: any, newProp: any) {
-  if (isEventProp(name)) {
-    if (newProp === undefined || newProp !== oldProp) {
-      removeEventListener($el, name, oldProp)
-    }
-    if (newProp) {
-      addEventListener($el, name, newProp)
-    }
-  }
-}
-
-function updateEventListeners($el: HTMLElement, newProps: any, oldProps: any = {}) {
-  const props = { ...oldProps, ...newProps }
-  Object.keys(props).forEach(key => updateEventListener($el, key, oldProps[key], newProps[key]))
-}
-
-function addProp($el: HTMLElement, name: string, value: any) {
-  if (!isEventProp(name)) {
-    if (typeof value === 'boolean') {
-      addBooleanProp($el, name, value)
-    } else {
-      $el.setAttribute(name, value)
-    }
-  }
-}
-
-function addProps($el: HTMLElement, props: any) {
-  Object.keys(props).forEach(key => addProp($el, key, props[key]))
-}
-
-function removeProp($el: HTMLElement, name: string, value: any) {
-  if (typeof value === 'boolean') {
-    removeBooleanProp($el, name)
-  } else {
-    $el.removeAttribute(name)
-  }
-}
-
-function addBooleanProp($el: HTMLElement, name: string, value: boolean) {
-  if (value) {
-    $el.setAttribute(name, value.toString())
-    $el[name] = true
-  } else {
-    $el[name] = false
-  }
-}
-
-function removeBooleanProp($el: HTMLElement, name: string) {
-  $el.removeAttribute(name)
-  $el[name] = false
-}
-
-function updateProp($el: HTMLElement, name: string, oldValue: any, newValue: any) {
-  if (newValue === undefined) {
-    removeProp($el, name, oldValue)
-  } else if (oldValue === undefined || newValue !== oldValue) {
-    addProp($el, name, newValue)
-  }
-}
-
-function updateProps($el: HTMLElement, newProps: any, oldProps: any = {}) {
-  const props = { ...oldProps, ...newProps }
-  Object.keys(props).forEach(key => updateProp($el, key, oldProps[key], newProps[key]))
-}
-
 const createElement = (node: ValidVNode): HTMLElement | Text => {
   if (typeof node === 'string' || typeof node === 'number') {
     return document.createTextNode(node.toString())
   } else if (node) {
     const $el = document.createElement(node.type)
-    addProps($el, node.props)
-    addEventListeners($el, node.props)
-    node.children.map(createElement)
+    attributes.addAttributes($el, node.props)
+    attributes.addEventListeners($el, node.props)
+    node.children.filter(isPresent).map(createElement)
       .forEach($el.appendChild.bind($el))
     return $el
   }
 }
 
-// TODO: type this
-function changed(a, b) {
-  return typeof a !== typeof b ||
-    typeof a === 'string' && a !== b ||
-    typeof a === 'number' && a !== b ||
-    a.type !== b.type
+function hasVNodeChanged(nodeA: ValidVNode, nodeB: ValidVNode): boolean {
+  let typeHasChanged = typeof nodeA !== typeof nodeB
+  let stringHasChanged = typeof nodeA === 'string' && nodeA !== nodeB
+  let numberHasChanged = typeof nodeA === 'number' && nodeA !== nodeB
+  let vNodeTypeHasChanged = nodeA && nodeB && ((nodeA as VNode).type !== (nodeB as VNode).type)
+  return typeHasChanged || stringHasChanged || numberHasChanged || vNodeTypeHasChanged
 }
 
 function isVNode(node: ValidVNode): boolean {
-  return typeof node !== 'string' && typeof node !== 'number'
+  return isPresent(node) && typeof node !== 'string' && typeof node !== 'number'
+}
+
+function isPresent(node: any): boolean {
+  return node !== null && node !== undefined
 }
 
 const updateElement = ($parent: HTMLElement | Node, newVNode: ValidVNode, oldVNode?: ValidVNode, index: number = 0) => {
-  if (oldVNode === undefined) {
+  const child = $parent.childNodes[index]
+  if (oldVNode === undefined && isPresent(newVNode)) {
     $parent.appendChild(createElement(newVNode))
-  } else if (!newVNode) {
-    $parent.removeChild($parent.childNodes[index])
-  } else if (changed(newVNode, oldVNode)) {
-    $parent.replaceChild(createElement(newVNode), $parent.childNodes[index])
+  } else if (!newVNode && isPresent(child)) {
+    $parent.removeChild(child)
+  } else if (hasVNodeChanged(newVNode, oldVNode)) {
+    $parent.replaceChild(createElement(newVNode), child)
   } else if (isVNode(newVNode) && isVNode(oldVNode)) {
-    // Make this better
-    updateProps(($parent.childNodes[index] as HTMLElement), (newVNode as VNode).props, (oldVNode as VNode).props)
-    updateEventListeners(($parent.childNodes[index] as HTMLElement), (newVNode as VNode).props, (oldVNode as VNode).props)
-    const newLength = (newVNode as VNode).children.length
-    const oldLength = (oldVNode as VNode).children.length
-    for (let i = 0; i < newLength || i < oldLength; i++) {
-      updateElement(
-        $parent.childNodes[index],
-        (newVNode as VNode).children[i],
-        (oldVNode as VNode).children[i],
-        i
-      )
-    }
+    let nVNode = newVNode as VNode
+    let oVNode = oldVNode as VNode
+    let hChild = child as HTMLElement
+    attributes.updateAttributes(hChild, nVNode.props, oVNode.props)
+    attributes.updateEventListeners(hChild, nVNode.props, oVNode.props)
+    Array.from({ length: getLargestNumber(nVNode.children.length, oVNode.children.length) })
+      .forEach((_, i) => updateElement(child, nVNode.children[i], oVNode.children[i], i))
   }
+}
+
+function getLargestNumber(a: number, b: number) {
+  return a > b ? a : b
 }
 
 export function h(type: keyof HTMLElementTagNameMap, props?: any, children?: ValidVNode[]): VNode {
