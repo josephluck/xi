@@ -13,7 +13,7 @@ const view: View<MyState> = (state = defaultState, update) => {
   return h('div', {
     id: 'my-div',
     onclick: updateTitle,
-  }, state.title)
+  }, [state.title])
 }
 
 export default view

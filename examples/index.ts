@@ -1,7 +1,7 @@
 import { run, View } from '../src'
-import simple from './simple'
+// import simple from './simple'
 import counter from './counter'
-import redux from './redux-ish'
+// import redux from './redux-ish'
 
 function render(app: View<any>) {
   const node = document.createElement('div')
@@ -13,6 +13,6 @@ function render(app: View<any>) {
   run(node, app)
 }
 
-render(simple)
+// render(simple)
 render(counter)
-render(redux)
+// render(redux)

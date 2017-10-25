@@ -57,18 +57,18 @@ const makeDispatch = redux((state: MyState, action: Actions) => {
 })
 
 const button = (text: string, onclick: () => any) => {
-  return h('button', { onclick }, text)
+  return h('button', { onclick }, [text])
 }
 
 const view: View<MyState> = (state = defaultState, update) => {
   const dispatch = makeDispatch(state, update)
   const increment = () => dispatch({ type: 'increment', payload: 2 })
   const decrement = () => dispatch({ type: 'decrement', payload: 1 })
-  return h('div', {}, h('div', {}, [
+  return h('div', {}, [h('div', {}, [
     button('decrement', decrement),
-    h('span', {}, state.count),
+    h('span', {}, [state.count]),
     button('increment', increment),
-  ]))
+  ])])
 }
 
 export default view
