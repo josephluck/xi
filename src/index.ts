@@ -16,39 +16,50 @@ function extractEventName(name: string): string {
   return name.slice(2).toLowerCase()
 }
 
-function addEventListeners($el: HTMLElement, props: any) {
-  Object.keys(props).forEach(name => {
-    if (isEventProp(name)) {
-      $el.addEventListener(
-        extractEventName(name),
-        props[name]
-      )
-    }
-  })
+function addEventListener($el: HTMLElement, name: string, prop: any) {
+  if (isEventProp(name)) {
+    $el.addEventListener(extractEventName(name), prop)
+  }
 }
 
-function setBooleanProp($el: HTMLElement, name: string, value: boolean) {
-  if (value) {
-    $el.setAttribute(name, value.toString())
-    $el[name] = true
-  } else {
-    $el[name] = false
+function addEventListeners($el: HTMLElement, props: any) {
+  Object.keys(props).forEach(key => addEventListener($el, key, props[key]))
+}
+
+function removeEventListener($el: HTMLElement, name: string, prop: any) {
+  if (isEventProp(name)) {
+    $el.removeEventListener(extractEventName(name), prop)
   }
+}
+
+function updateEventListener($el: HTMLElement, name: string, oldProp: any, newProp: any) {
+  if (isEventProp(name)) {
+    if (newProp === undefined || newProp !== oldProp) {
+      removeEventListener($el, name, oldProp)
+    }
+    if (newProp) {
+      addEventListener($el, name, newProp)
+    }
+  }
+}
+
+function updateEventListeners($el: HTMLElement, newProps: any, oldProps: any = {}) {
+  const props = { ...oldProps, ...newProps }
+  Object.keys(props).forEach(key => updateEventListener($el, key, oldProps[key], newProps[key]))
 }
 
 function addProp($el: HTMLElement, name: string, value: any) {
   if (!isEventProp(name)) {
     if (typeof value === 'boolean') {
-      setBooleanProp($el, name, value)
+      addBooleanProp($el, name, value)
     } else {
       $el.setAttribute(name, value)
     }
   }
 }
 
-function removeBooleanProp($el: HTMLElement, name: string) {
-  $el.removeAttribute(name)
-  $el[name] = false
+function addProps($el: HTMLElement, props: any) {
+  Object.keys(props).forEach(key => addProp($el, key, props[key]))
 }
 
 function removeProp($el: HTMLElement, name: string, value: any) {
@@ -57,6 +68,20 @@ function removeProp($el: HTMLElement, name: string, value: any) {
   } else {
     $el.removeAttribute(name)
   }
+}
+
+function addBooleanProp($el: HTMLElement, name: string, value: boolean) {
+  if (value) {
+    $el.setAttribute(name, value.toString())
+    $el[name] = true
+  } else {
+    $el[name] = false
+  }
+}
+
+function removeBooleanProp($el: HTMLElement, name: string) {
+  $el.removeAttribute(name)
+  $el[name] = false
 }
 
 function updateProp($el: HTMLElement, name: string, oldValue: any, newValue: any) {
@@ -70,10 +95,6 @@ function updateProp($el: HTMLElement, name: string, oldValue: any, newValue: any
 function updateProps($el: HTMLElement, newProps: any, oldProps: any = {}) {
   const props = { ...oldProps, ...newProps }
   Object.keys(props).forEach(key => updateProp($el, key, oldProps[key], newProps[key]))
-}
-
-function addProps($el: HTMLElement, props: any) {
-  Object.keys(props).forEach(key => addProp($el, key, props[key]))
 }
 
 const createElement = (node: ValidVNode): HTMLElement | Text => {
@@ -111,7 +132,7 @@ const updateElement = ($parent: HTMLElement | Node, newVNode: ValidVNode, oldVNo
   } else if (isVNode(newVNode) && isVNode(oldVNode)) {
     // Make this better
     updateProps(($parent.childNodes[index] as HTMLElement), (newVNode as VNode).props, (oldVNode as VNode).props)
-    addEventListeners(($parent.childNodes[index] as HTMLElement), (newVNode as VNode).props)
+    updateEventListeners(($parent.childNodes[index] as HTMLElement), (newVNode as VNode).props, (oldVNode as VNode).props)
     const newLength = (newVNode as VNode).children.length
     const oldLength = (oldVNode as VNode).children.length
     for (let i = 0; i < newLength || i < oldLength; i++) {
