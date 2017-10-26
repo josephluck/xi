@@ -1,4 +1,4 @@
-# ‎xi
+# Ξ xi
 
 A minimum viable front-end framework with added virtual DOM
 
