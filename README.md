@@ -1,10 +1,10 @@
-# ‎xi
+# Ξ xi
 
 A minimum viable front-end framework with added virtual DOM
 
 ## Why?
 
-Don't use this :-) It's really just an indulgent idea of how small a UI framework + virtual DOM can be. It's extremely slow and good for... well, nothing much of anything really.
+Don't use this :-) It's really just an indulgent idea of how small a UI framework + virtual DOM can be. It's slightly better than [Pion](http://github.com/josephluck/pion), but is good for... well, nothing much of anything really.
 
 ## Overview
 
@@ -15,7 +15,7 @@ Xi has only a few concepts:
 Views render HTML elements to the page:
 
 ```javascript
-h('div', { id: 'xi-app', 'Xi is super small!' }) // --> <div id='xi-app'>Xi is super small</div> 
+h('div', { id: 'xi-app' }, 'Xi is super small!') // --> <div id='xi-app'>Xi is super small</div> 
 ```
 
 ### State
