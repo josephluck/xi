@@ -76,7 +76,7 @@ const renderSquare = (onclick: (rowIndex: number, columnIndex: number) => any, r
   return h('div', {
     style: 'width: 10px; height: 10px; display: inline-block; margin: 5px; border: solid 1px black;',
     onclick: square === '' ? () => onclick(rowIndex, columnIndex) : undefined,
-  }, null)
+  }, square)
 }
 
 const renderRow = (onclick: (rowIndex: number, columnIndex: number) => any) => (row: Row, rowIndex: number) => {
