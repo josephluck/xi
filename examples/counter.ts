@@ -1,4 +1,4 @@
-import { View, h } from '../src'
+import { h, View } from '../src'
 
 export type MyState = {
   count: number
@@ -27,4 +27,6 @@ const view: View<MyState> = (state = defaultState, update) => {
   ])
 }
 
-export default view
+export default function (render) {
+  render(view)
+}

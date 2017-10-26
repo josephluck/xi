@@ -16,4 +16,6 @@ const view: View<MyState> = (state = defaultState, update) => {
   }, [state.title])
 }
 
-export default view
+export default function (render) {
+  render(view)
+}
