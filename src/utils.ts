@@ -1,10 +1,10 @@
 import * as Types from './types'
 
 export function hasVNodeChanged(nodeA: Types.ValidVNode, nodeB: Types.ValidVNode): boolean {
-  let typeHasChanged = typeof nodeA !== typeof nodeB
-  let stringHasChanged = typeof nodeA === 'string' && nodeA !== nodeB
-  let numberHasChanged = typeof nodeA === 'number' && nodeA !== nodeB
-  let vNodeTypeHasChanged = isPresent(nodeA) && isPresent(nodeB) && ((nodeA as Types.VNode).type !== (nodeB as Types.VNode).type)
+  const typeHasChanged = typeof nodeA !== typeof nodeB
+  const stringHasChanged = typeof nodeA === 'string' && nodeA !== nodeB
+  const numberHasChanged = typeof nodeA === 'number' && nodeA !== nodeB
+  const vNodeTypeHasChanged = isVNode(nodeA) && isVNode(nodeB) && ((nodeA as Types.VNode).type !== (nodeB as Types.VNode).type)
   return typeHasChanged || stringHasChanged || numberHasChanged || vNodeTypeHasChanged
 }
 

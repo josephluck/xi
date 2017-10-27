@@ -1,4 +1,3 @@
-
 export function isEventAttribute(name: string): boolean {
   return /^on/.test(name)
 }
@@ -32,19 +31,16 @@ export function addEventListeners($el: HTMLElement, events: any) {
 }
 
 export function updateEventListeners($el: HTMLElement, oldEvents: any, newEvents: any = {}) {
-  const props = { ...newEvents, ...oldEvents }
-  Object.keys(props)
+  Object.keys({ ...newEvents, ...oldEvents })
     .filter(isEventAttribute)
     .forEach(name => updateEventListener($el, name, newEvents[name], oldEvents[name]))
 }
 
 export function addAttribute($el: HTMLElement, name: string, value: any) {
-  if (!isEventAttribute(name)) {
-    if (typeof value === 'boolean') {
-      addBooleanAttribute($el, name, value)
-    } else {
-      $el.setAttribute(name, value)
-    }
+  if (typeof value === 'boolean') {
+    addBooleanAttribute($el, name, value)
+  } else {
+    $el.setAttribute(name, value)
   }
 }
 
@@ -79,10 +75,13 @@ export function removeBooleanAttribute($el: HTMLElement, name: string) {
 }
 
 export function addAttributes($el: HTMLElement, props: any) {
-  Object.keys(props).forEach(key => addAttribute($el, key, props[key]))
+  Object.keys(props)
+    .filter(key => !isEventAttribute(key))
+    .forEach(key => addAttribute($el, key, props[key]))
 }
 
 export function updateAttributes($el: HTMLElement, newAttributes: any, oldAttributes: any = {}) {
-  const props = { ...oldAttributes, ...newAttributes }
-  Object.keys(props).forEach(key => updateAttribute($el, key, oldAttributes[key], newAttributes[key]))
+  Object.keys({ ...oldAttributes, ...newAttributes })
+    .filter(key => !isEventAttribute(key))
+    .forEach(key => updateAttribute($el, key, oldAttributes[key], newAttributes[key]))
 }

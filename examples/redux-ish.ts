@@ -1,4 +1,4 @@
-import { View, h, Update } from '../src'
+import { View, h, Update, run } from '../src'
 
 /*
 Redux-ish helper functions
@@ -71,7 +71,9 @@ const view: View<MyState> = (state = defaultState, update) => {
   ])
 }
 
-export default function (render) {
-  render(view)
+export default function app() {
+  const node = document.createElement('div')
+  node.style.margin = '100px'
+  document.body.appendChild(node)
+  run(node, view)
 }
-

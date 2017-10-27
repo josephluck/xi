@@ -42,6 +42,29 @@ const updateElement = ($parent: HTMLElement | Node, newVNode: Types.ValidVNode, 
   }
 }
 
+export function app<S>(state: S) {
+  let oldVNode
+  let app
+  let node
+  const render = () => {
+    const newVNode = app(state, update)
+    updateElement(node, newVNode, oldVNode)
+    oldVNode = newVNode
+  }
+  function run(elm: string | HTMLElement, view: Types.View<S>) {
+    app = view
+    node = typeof elm === 'string' ? document.querySelector(elm) : elm
+    render()
+  }
+  function update(updater: Types.Updater<S>) {
+    state = typeof updater === 'function'
+      ? updater(state)
+      : updater
+    render()
+  }
+  return { update, run }
+}
+
 export function run<S>(elm: string | HTMLElement, view: Types.View<S>) {
   const node = typeof elm === 'string' ? document.querySelector(elm) : elm
   let state
@@ -56,4 +79,7 @@ export function run<S>(elm: string | HTMLElement, view: Types.View<S>) {
     oldVNode = newVNode
   }
   render()
+  return update
 }
+
+export default app
