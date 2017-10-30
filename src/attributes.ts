@@ -24,13 +24,13 @@ export function removeEventListener($el: HTMLElement, name: string, event: any) 
   $el.removeEventListener(extractEventName(name), event)
 }
 
-export function addEventListeners($el: HTMLElement, events: any) {
+export function addEventListeners($el: HTMLElement, events: any = {}) {
   Object.keys(events)
     .filter(isEventAttribute)
     .forEach(name => addEventListener($el, name, events[name]))
 }
 
-export function updateEventListeners($el: HTMLElement, oldEvents: any, newEvents: any = {}) {
+export function updateEventListeners($el: HTMLElement, oldEvents: any = {}, newEvents: any = {}) {
   Object.keys({ ...newEvents, ...oldEvents })
     .filter(isEventAttribute)
     .forEach(name => updateEventListener($el, name, newEvents[name], oldEvents[name]))
@@ -74,13 +74,13 @@ export function removeBooleanAttribute($el: HTMLElement, name: string) {
   $el[name] = false
 }
 
-export function addAttributes($el: HTMLElement, props: any) {
+export function addAttributes($el: HTMLElement, props: any = {}) {
   Object.keys(props)
     .filter(key => !isEventAttribute(key))
     .forEach(key => addAttribute($el, key, props[key]))
 }
 
-export function updateAttributes($el: HTMLElement, newAttributes: any, oldAttributes: any = {}) {
+export function updateAttributes($el: HTMLElement, newAttributes: any = {}, oldAttributes: any = {}) {
   Object.keys({ ...oldAttributes, ...newAttributes })
     .filter(key => !isEventAttribute(key))
     .forEach(key => updateAttribute($el, key, oldAttributes[key], newAttributes[key]))

@@ -6,10 +6,6 @@ export type State = {
 
 const defaultState: State = { count: 5 }
 
-const button = (text: string, onclick: () => any) => {
-  return h('button', { onclick }, text)
-}
-
 interface Actions {
   increment: () => any
   decrement: () => any
@@ -20,6 +16,10 @@ function makeActions(update: Update<State>): Actions {
     increment: () => update(state => ({ count: state.count + 1 })),
     decrement: () => update(state => ({ count: state.count - 1 })),
   }
+}
+
+const button = (text: string, onclick: () => any) => {
+  return h('button', { onclick }, text)
 }
 
 const view = (actions: Actions): View<State> => (state) => {
