@@ -3,7 +3,8 @@ export interface VNode {
   props?: any
   children?: ValidVNode | ValidVNode[]
 }
-export type ValidVNode = VNode | string | number
+export type Component<S> = View<S>
+export type ValidVNode<S=any> = Component<S> | VNode | string | number
 export type Updater<S> = (state: S) => S
 export type Update<S> = (updater: S | Updater<S>) => any
 export type View<S> = (state: S, update: Update<S>) => ValidVNode

@@ -16,30 +16,30 @@ function makeActions(update: Update<State>): Actions {
   }
 }
 
-// const button = (text: string, onclick: () => any) => {
-//   return h('button', { onclick }, text)
-// }
+const button = (text: string, onclick: () => any) => {
+  return h('button', { onclick }, text)
+}
 
-// const counter = () => (state = { count: 0 }, update) => {
-//   return h('div', {}, [
-//     h('div', {}, [
-//       button('decrement', () => update(state => ({ count: state.count - 1 }))),
-//       h('span', { id: state.count }, state.count),
-//       button('increment', () => update(state => ({ count: state.count + 1 }))),
-//       null
-//     ])
-//   ])
-// }
+const counter = (name: string) => (state = { count: 0 }, update) => {
+  return h('div', {}, [
+    h('div', {}, [
+      button('decrement', () => update(state => ({ count: state.count - 1 }))),
+      h('span', { id: state.count }, state.count),
+      button('increment', () => update(state => ({ count: state.count + 1 }))),
+      null
+    ])
+  ])
+}
 
 const view = (actions: Actions): View<State> => (state) => {
   return h('div', {}, [
     h('div', {}, [
+      counter('One'),
       h('div'),
-      // counter(),
       h('input', { value: state.title, oninput: e => actions.updateTitle(e.target.value) }),
       h('span', {}, state.title),
       h('div'),
-      // counter(),
+      counter('Two'),
       null
     ])
   ])
