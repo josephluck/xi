@@ -7,14 +7,21 @@ export function h(type: keyof HTMLElementTagNameMap, props?: any, children?: Typ
   return { type, props, children }
 }
 
+const isComponent = (vNode: Types.ValidVNode) => {
+  return typeof vNode === 'function'
+}
+
 const createElement = (node: Types.ValidVNode): HTMLElement | Text => {
   if (typeof node === 'string' || typeof node === 'number') {
     return document.createTextNode(node.toString())
-  } else if (utils.isPresent(node)) {
-    const $el = document.createElement(node.type)
-    const children = node.children instanceof Array ? node.children : [node.children]
-    attributes.addAttributes($el, node.props)
-    attributes.addEventListeners($el, node.props)
+  } else if (isComponent(node)) {
+    console.log('Create a component')
+  } else if (utils.isVNode(node)) {
+    const vNode = node as Types.VNode
+    const $el = document.createElement(vNode.type)
+    const children = vNode.children instanceof Array ? vNode.children : [vNode.children]
+    attributes.addAttributes($el, vNode.props)
+    attributes.addEventListeners($el, vNode.props)
     children.filter(utils.isPresent).map(createElement)
       .forEach($el.appendChild.bind($el))
     return $el
@@ -39,6 +46,8 @@ const updateElement = ($parent: HTMLElement | Node, newVNode: Types.ValidVNode, 
     attributes.updateEventListeners(hChild, nVNode.props, oVNode.props)
     utils.getLargestArray(nVNodeChildren, oVNodeChildren)
       .forEach((_, i) => updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i))
+  } else if (isComponent(newVNode)) {
+    console.log('Update a component, only when props have changed tho')
   }
 }
 
