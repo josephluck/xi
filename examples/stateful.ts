@@ -23,7 +23,7 @@ const button = (text: string, onclick: () => any) => {
 const counter = (name: string) => (state = { count: 0 }, update) => {
   return h('div', {}, [
     h('div', {}, [
-      button('decrement', () => update(state => ({ count: state.count - 1 }))),
+      button('decrement', () => update(state => ({ count: 10 }))),
       h('span', { id: state.count }, state.count),
       button('increment', () => update(state => ({ count: state.count + 1 }))),
       null
