@@ -11,50 +11,64 @@ const isComponent = (vNode: Types.ValidVNode) => {
   return typeof vNode === 'function'
 }
 
-function createComponent(component: Types.View<any>, render: any) {
-  let state
-  function update(updater: Types.Updater<any>) {
+function createComponent(
+  $parent: HTMLElement,
+  component: Types.Component<any>,
+  index: number = 0,
+) {
+  let state // This will need to persist when component is re-instantiated...
+  const update = (updater: Types.Updater<any>) => {
     state = typeof updater === 'function'
       ? updater(state)
       : updater
-    render(component(state, update))
+    render()
   }
-  return component(state, update)
+  function render() {
+    const oldChild = $parent.childNodes[index]
+    const newChild = createElement(component(state, update))
+    if (oldChild) {
+      $parent.replaceChild(newChild, oldChild)
+    } else {
+      $parent.appendChild(newChild)
+    }
+  }
+  return createElement(component(state, update))
 }
 
-const createElement = (node: Types.ValidVNode, renderComponent: any): HTMLElement | Text => {
+function createElement(node: Types.ValidVNode): HTMLElement | Text {
   if (typeof node === 'string' || typeof node === 'number') {
     return document.createTextNode(node.toString())
-  } else if (isComponent(node)) {
-    const component = createComponent(node as Types.View<any>, renderComponent)
-    return createElement(component, renderComponent)
   } else if (utils.isVNode(node)) {
     const vNode = node as Types.VNode
     const $el = document.createElement(vNode.type)
     const children = vNode.children instanceof Array ? vNode.children : [vNode.children]
     attributes.addAttributes($el, vNode.props)
     attributes.addEventListeners($el, vNode.props)
-    children.filter(utils.isPresent).map(e => createElement(e, renderComponent))
+    children.filter(utils.isPresent).map((child, index) => {
+      if (isComponent(child)) {
+        return createComponent($el, child as Types.Component<any>, index)
+      } else {
+        return createElement(child)
+      }
+    })
       .forEach($el.appendChild.bind($el))
     return $el
   }
 }
 
-const updateElement = ($parent: HTMLElement | Node, newVNode: Types.ValidVNode, oldVNode?: Types.ValidVNode, index: number = 0) => {
+function updateElement(
+  $parent: HTMLElement | Node,
+  newVNode: Types.ValidVNode,
+  oldVNode?: Types.ValidVNode,
+  index: number = 0,
+) {
   const child = $parent.childNodes[index]
-  const renderComponent = () => {
-    console.log($parent)
-    console.log(child)
-    debugger
-  }
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
-    $parent.appendChild(createElement(newVNode, renderComponent))
+    $parent.appendChild(createElement(newVNode))
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
     $parent.removeChild(child)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
-    $parent.replaceChild(createElement(newVNode, renderComponent), child)
-  } else if (isComponent(newVNode)) {
-    console.log('Update a component, only when props have changed tho')
+    $parent.replaceChild(createElement(newVNode), child)
   } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
     const oVNode = oldVNode as Types.VNode
