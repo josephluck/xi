@@ -69,8 +69,6 @@ function updateElement(
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
     $parent.appendChild(createElement(newVNode))
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
-    debugger
-    // This doesn't get called when top level components from this call need to be removed
     $parent.removeChild(child)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
     $parent.replaceChild(createElement(newVNode), child)
@@ -84,12 +82,7 @@ function updateElement(
     attributes.updateEventListeners(hChild, nVNode.props, oVNode.props)
     utils.getLargestArray(nVNodeChildren, oVNodeChildren)
       .forEach((c, i) => {
-        if (!utils.isComponent(c)) {
-          // The above conditinoal might be wrong when conditionally rendering components
-          updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i)
-        } else {
-          console.log('rerender this component with new props', nVNodeChildren[i])
-        }
+        updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i)
       })
   }
 }
