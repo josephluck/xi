@@ -32,7 +32,11 @@ function createComponent(
   return createElement(component(state, update))
 }
 
-function createElement(node: Types.ValidVNode, $parent?: HTMLElement, index?: number): HTMLElement | Text {
+function createElement(
+  node: Types.ValidVNode,
+  $parent?: HTMLElement,
+  index?: number,
+): HTMLElement | Text {
   if (typeof node === 'string' || typeof node === 'number') {
     return document.createTextNode(node.toString())
   } else if (utils.isVNode(node)) {
@@ -48,8 +52,13 @@ function createElement(node: Types.ValidVNode, $parent?: HTMLElement, index?: nu
     }).forEach($parent.appendChild.bind($parent))
     return $parent
   } else if (utils.isComponent(node) && $parent) {
+    // What about updating a component (i.e. persisting state?)
     return createComponent($parent, node as Types.Component<any>, index)
   }
+}
+
+function hasComponentChanged(newComponent: Types.ValidVNode, oldComponent: Types.ValidVNode): boolean {
+  return utils.isComponent(newComponent) && utils.isComponent(oldComponent)
 }
 
 function updateElement(
@@ -65,6 +74,8 @@ function updateElement(
     $parent.removeChild(child)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
     $parent.replaceChild(createElement(newVNode), child)
+  } else if (hasComponentChanged(newVNode, oldVNode)) {
+    $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), child)
   } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
     const oVNode = oldVNode as Types.VNode
