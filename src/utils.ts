@@ -16,6 +16,10 @@ export function isPresent(node: any): boolean {
   return node !== null && node !== undefined
 }
 
+export function isComponent(vNode: Types.ValidVNode) {
+  return typeof vNode === 'function'
+}
+
 export function getLargestArray<A, B>(a: A[], b: B[]) {
   return a.length > b.length ? a : b
 }

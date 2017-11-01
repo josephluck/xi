@@ -7,17 +7,13 @@ export function h(type: keyof HTMLElementTagNameMap, props?: any, children?: Typ
   return { type, props, children }
 }
 
-const isComponent = (vNode: Types.ValidVNode) => {
-  return typeof vNode === 'function'
-}
-
 // Could probably marry this with the main `app` function below
 function createComponent(
   $parent: HTMLElement,
   component: Types.Component<any>,
   index: number = 0,
 ) {
-  let state // This will need to persist when component is re-instantiated...
+  let state // This will need to persist when component is updated due to props
   const update = (updater: Types.Updater<any>) => {
     state = typeof updater === 'function'
       ? updater(state) // First time this is called the updater function receives undefined instead of the default state of the component
@@ -46,7 +42,7 @@ function createElement(node: Types.ValidVNode): HTMLElement | Text {
     attributes.addAttributes($el, vNode.props)
     attributes.addEventListeners($el, vNode.props)
     children.filter(utils.isPresent).map((child, index) => {
-      if (isComponent(child)) {
+      if (utils.isComponent(child)) {
         return createComponent($el, child as Types.Component<any>, index)
       } else {
         return createElement(child)
@@ -80,7 +76,7 @@ function updateElement(
     attributes.updateEventListeners(hChild, nVNode.props, oVNode.props)
     utils.getLargestArray(nVNodeChildren, oVNodeChildren)
       .forEach((c, i) => {
-        if (!isComponent(c)) {
+        if (!utils.isComponent(c)) { // This might be wrong when conditionally rendering components...
           updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i)
         }
       })
