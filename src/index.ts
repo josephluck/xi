@@ -37,19 +37,25 @@ function createElement(node: Types.ValidVNode): HTMLElement | Text {
     return document.createTextNode(node.toString())
   } else if (utils.isVNode(node)) {
     const vNode = node as Types.VNode
-    const $el = document.createElement(vNode.type)
+    const $parent = document.createElement(vNode.type)
     const children = vNode.children instanceof Array ? vNode.children : [vNode.children]
-    attributes.addAttributes($el, vNode.props)
-    attributes.addEventListeners($el, vNode.props)
+    attributes.addAttributes($parent, vNode.props)
+    attributes.addEventListeners($parent, vNode.props)
     children.filter(utils.isPresent).map((child, index) => {
-      if (utils.isComponent(child)) {
-        return createComponent($el, child as Types.Component<any>, index)
-      } else {
-        return createElement(child)
-      }
+      return utils.isComponent(child)
+        ? createComponent($parent, child as Types.Component<any>, index)
+        : createElement(child)
     })
-      .forEach($el.appendChild.bind($el))
-    return $el
+      .forEach($parent.appendChild.bind($parent))
+    return $parent
+  } else if (utils.isComponent(node)) {
+    // Called when top level elem is a component and should be appended to the tree,
+    // may have difficulty rerendering itself as no $parent or index here...
+    // the below is a little hacky as it requires an extra element to be present in the DOM
+    // otherwise the createElement function could take an optional secondary argument for the $parent
+    const $parent = document.createElement('div')
+    $parent.appendChild(createComponent($parent, node as Types.Component<any>, 0))
+    return $parent
   }
 }
 
@@ -63,6 +69,8 @@ function updateElement(
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
     $parent.appendChild(createElement(newVNode))
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
+    debugger
+    // This doesn't get called when top level components from this call need to be removed
     $parent.removeChild(child)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
     $parent.replaceChild(createElement(newVNode), child)
@@ -76,8 +84,11 @@ function updateElement(
     attributes.updateEventListeners(hChild, nVNode.props, oVNode.props)
     utils.getLargestArray(nVNodeChildren, oVNodeChildren)
       .forEach((c, i) => {
-        if (!utils.isComponent(c)) { // This might be wrong when conditionally rendering components...
+        if (!utils.isComponent(c)) {
+          // The above conditinoal might be wrong when conditionally rendering components
           updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i)
+        } else {
+          console.log('rerender this component with new props', nVNodeChildren[i])
         }
       })
   }

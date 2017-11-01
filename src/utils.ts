@@ -9,7 +9,7 @@ export function hasVNodeChanged(nodeA: Types.ValidVNode, nodeB: Types.ValidVNode
 }
 
 export function isVNode(node: Types.ValidVNode): boolean {
-  return isPresent(node) && typeof node !== 'string' && typeof node !== 'number'
+  return isPresent(node) && !isComponent(node) && typeof node !== 'string' && typeof node !== 'number'
 }
 
 export function isPresent(node: any): boolean {

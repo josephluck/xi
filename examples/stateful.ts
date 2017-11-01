@@ -38,6 +38,7 @@ const conditionalCounter = (state = { showing: false }, update) => {
 }
 
 const view = (actions: Actions): View<State> => (state) => {
+  console.log(state.title === '')
   return h('div', { id: 'container' }, [
     counter(state.title),
     conditionalCounter,
@@ -46,7 +47,7 @@ const view = (actions: Actions): View<State> => (state) => {
       state.title,
     ]),
     counter(state.title + ' Two'),
-    conditionalCounter,
+    state.title === '' ? conditionalCounter : null,
     null
   ])
 }
