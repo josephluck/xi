@@ -11,6 +11,7 @@ const isComponent = (vNode: Types.ValidVNode) => {
   return typeof vNode === 'function'
 }
 
+// Could probably marry this with the main `app` function below
 function createComponent(
   $parent: HTMLElement,
   component: Types.Component<any>,
@@ -19,7 +20,7 @@ function createComponent(
   let state // This will need to persist when component is re-instantiated...
   const update = (updater: Types.Updater<any>) => {
     state = typeof updater === 'function'
-      ? updater(state)
+      ? updater(state) // First time this is called the updater function receives undefined instead of the default state of the component
       : updater
     render()
   }
@@ -78,7 +79,11 @@ function updateElement(
     attributes.updateAttributes(hChild, nVNode.props, oVNode.props)
     attributes.updateEventListeners(hChild, nVNode.props, oVNode.props)
     utils.getLargestArray(nVNodeChildren, oVNodeChildren)
-      .forEach((_, i) => updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i))
+      .forEach((c, i) => {
+        if (!isComponent(c)) {
+          updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i)
+        }
+      })
   }
 }
 

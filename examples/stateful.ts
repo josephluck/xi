@@ -21,25 +21,21 @@ const button = (text: string, onclick: () => any) => {
 }
 
 const counter = (name: string) => (state = { count: 0 }, update) => {
-  return h('div', {}, [
-    button('decrement', () => update(state => ({ count: 10 }))),
-    h('span', { id: state.count }, state.count),
-    button('increment', () => update(state => ({ count: state.count + 1 }))),
+  return h('div', { id: `counter-${name}` }, [
+    button('decrement', () => update({ count: state.count - 1 })),
+    h('span', { id: state.count }, `${state.count} for ${name}`),
+    button('increment', () => update({ count: state.count + 1 })),
     null
   ])
 }
 
 const view = (actions: Actions): View<State> => (state) => {
-  return h('div', {}, [
-    h('div', {}, [
-      counter('One'),
-      h('div'),
-      h('input', { value: state.title, oninput: e => actions.updateTitle(e.target.value) }),
-      h('span', {}, state.title),
-      h('div'),
-      counter('Two'),
-      null
-    ])
+  return h('div', { id: 'container' }, [
+    counter(state.title),
+    h('input', { value: state.title, oninput: e => actions.updateTitle(e.target.value) }),
+    state.title,
+    counter(state.title + ' Two'),
+    null
   ])
 }
 
