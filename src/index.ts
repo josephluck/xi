@@ -12,7 +12,7 @@ function createComponent(
   $parent: HTMLElement,
   component: Types.Component<any>,
   index: number = 0,
-) {
+): HTMLElement | Text {
   let state // This will need to persist when component is updated due to props
   const update = (updater: Types.Updater<any>) => {
     state = typeof updater === 'function'
@@ -32,7 +32,7 @@ function createComponent(
   return createElement(component(state, update))
 }
 
-function createElement(node: Types.ValidVNode): HTMLElement | Text {
+function createElement(node: Types.ValidVNode, $parent?: HTMLElement, index?: number): HTMLElement | Text {
   if (typeof node === 'string' || typeof node === 'number') {
     return document.createTextNode(node.toString())
   } else if (utils.isVNode(node)) {
@@ -45,17 +45,10 @@ function createElement(node: Types.ValidVNode): HTMLElement | Text {
       return utils.isComponent(child)
         ? createComponent($parent, child as Types.Component<any>, index)
         : createElement(child)
-    })
-      .forEach($parent.appendChild.bind($parent))
+    }).forEach($parent.appendChild.bind($parent))
     return $parent
-  } else if (utils.isComponent(node)) {
-    // Called when top level elem is a component and should be appended to the tree,
-    // may have difficulty rerendering itself as no $parent or index here...
-    // the below is a little hacky as it requires an extra element to be present in the DOM
-    // otherwise the createElement function could take an optional secondary argument for the $parent
-    const $parent = document.createElement('div')
-    $parent.appendChild(createComponent($parent, node as Types.Component<any>, 0))
-    return $parent
+  } else if (utils.isComponent(node) && $parent) {
+    return createComponent($parent, node as Types.Component<any>, index)
   }
 }
 
@@ -67,7 +60,7 @@ function updateElement(
 ) {
   const child = $parent.childNodes[index]
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
-    $parent.appendChild(createElement(newVNode))
+    $parent.appendChild(createElement(newVNode, $parent as HTMLElement, index))
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
     $parent.removeChild(child)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {

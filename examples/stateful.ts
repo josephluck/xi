@@ -30,7 +30,7 @@ const counter = (name: string) => (state = { count: 0 }, update) => {
 }
 
 const conditionalCounter = (state = { showing: false }, update) => {
-  return h('div', { id: 'conditional-counter', style: 'margin: 10px' }, [
+  return h('div', { id: 'conditional-counter', style: 'margin: 10px; border: solid 1px' }, [
     state.showing ? counter('conditional-counter') : null,
     button('toggle counter', () => update({ showing: !state.showing })),
     state.showing ? counter('conditional-counter') : null,
@@ -41,7 +41,7 @@ const view = (actions: Actions): View<State> => (state) => {
   return h('div', { id: 'container' }, [
     counter(state.title),
     conditionalCounter,
-    h('div', { style: 'margin: 10px' }, [
+    h('div', { style: 'margin: 10px; border: solid 1px' }, [
       h('input', { value: state.title, oninput: e => actions.updateTitle(e.target.value) }),
       state.title,
     ]),
