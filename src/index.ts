@@ -13,7 +13,7 @@ function createComponent(
   component: Types.Component<any>,
   index: number = 0,
 ): HTMLElement | Text {
-  let state // This will need to persist when component is updated due to props
+  let state = component.state // This will need to persist when component is updated due to props
   const update = (updater: Types.Updater<any>) => {
     state = typeof updater === 'function'
       ? updater(state) // First time this is called the updater function receives undefined instead of the default state of the component
@@ -22,14 +22,14 @@ function createComponent(
   }
   function render() {
     const oldChild = $parent.childNodes[index]
-    const newChild = createElement(component(state, update))
+    const newChild = createElement(component.render(state, update))
     if (oldChild) {
       $parent.replaceChild(newChild, oldChild)
     } else {
       $parent.appendChild(newChild)
     }
   }
-  return createElement(component(state, update))
+  return createElement(component.render(state, update))
 }
 
 function createElement(

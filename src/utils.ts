@@ -9,7 +9,7 @@ export function hasVNodeChanged(nodeA: Types.ValidVNode, nodeB: Types.ValidVNode
 }
 
 export function isVNode(node: Types.ValidVNode): boolean {
-  return isPresent(node) && !isComponent(node) && typeof node !== 'string' && typeof node !== 'number'
+  return isPresent(node) && (node as Types.VNode).type && typeof node !== 'string' && typeof node !== 'number'
 }
 
 export function isPresent(node: any): boolean {
@@ -17,7 +17,7 @@ export function isPresent(node: any): boolean {
 }
 
 export function isComponent(vNode: Types.ValidVNode) {
-  return typeof vNode === 'function'
+  return isPresent(vNode) && !!(vNode as Types.Component<any>).render
 }
 
 export function getLargestArray<A, B>(a: A[], b: B[]) {

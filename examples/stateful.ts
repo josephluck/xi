@@ -20,21 +20,47 @@ const button = (text: string, onclick: () => any) => {
   return h('button', { onclick }, text)
 }
 
-const counter = (name: string) => (state = { count: 0 }, update) => {
-  return h('div', { id: `counter-${name}`, style: 'margin: 10px' }, [
-    button('decrement', () => update({ count: state.count - 1 })),
-    h('span', { id: state.count }, `${state.count} for ${name}`),
-    button('increment', () => update({ count: state.count + 1 })),
-    null
-  ])
+const counter = (name: string) => {
+  return {
+    state: { count: 0 },
+    onMount(state, update) {
+      console.log(state, update)
+    },
+    onUnmount(state, update) {
+      console.log(state, update)
+    },
+    onUpdate(state, update) {
+      console.log(state, update)
+    },
+    render(state, update) {
+      return h('div', { id: `counter-${name}`, style: 'margin: 10px' }, [
+        button('decrement', () => update({ count: state.count - 1 })),
+        h('span', { id: state.count }, `${state.count} for ${name}`),
+        button('increment', () => update({ count: state.count + 1 })),
+        null
+      ])
+    }
+  }
 }
 
-const conditionalCounter = (state = { showing: false }, update) => {
-  return h('div', { id: 'conditional-counter', style: 'margin: 10px; border: solid 1px' }, [
-    state.showing ? counter('conditional-counter') : null,
-    button('toggle counter', () => update({ showing: !state.showing })),
-    state.showing ? counter('conditional-counter') : null,
-  ])
+const conditionalCounter = {
+  state: { showing: false },
+  onMount(state, update) {
+    console.log(state, update)
+  },
+  onUnmount(state, update) {
+    console.log(state, update)
+  },
+  onUpdate(state, update) {
+    console.log(state, update)
+  },
+  render(state, update) {
+    return h('div', { id: 'conditional-counter', style: 'margin: 10px; border: solid 1px' }, [
+      state.showing ? counter('conditional-counter') : null,
+      button('toggle counter', () => update({ showing: !state.showing })),
+      state.showing ? counter('conditional-counter') : null,
+    ])
+  }
 }
 
 const view = (actions: Actions): View<State> => (state) => {
