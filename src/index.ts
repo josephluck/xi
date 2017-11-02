@@ -7,7 +7,7 @@ export function h(type: keyof HTMLElementTagNameMap, props?: any, children?: Typ
   return { type, props, children }
 }
 
-// Could probably marry this with the main `app` function below
+// Could probably marry this with the main `app` function below so that `app` takes a component (made with this fn)
 function createComponent(
   $parent: HTMLElement,
   component: Types.Component<any>,
@@ -16,8 +16,9 @@ function createComponent(
   let state = component.state // This will need to persist when component is updated due to props
   const update = (updater: Types.Updater<any>) => {
     state = typeof updater === 'function'
-      ? updater(state) // First time this is called the updater function receives undefined instead of the default state of the component
+      ? updater(state)
       : updater
+    component.state = state
     render()
   }
   function render() {
@@ -75,6 +76,7 @@ function updateElement(
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
     $parent.replaceChild(createElement(newVNode), child)
   } else if (hasComponentChanged(newVNode, oldVNode)) {
+    console.log('should persist state: ', (newVNode as Types.Component<any>).state)
     $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), child)
   } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
@@ -113,22 +115,3 @@ export function app<S>(state: S) {
   }
   return { update, run }
 }
-
-export function run<S>(elm: string | HTMLElement, view: Types.View<S>) {
-  const node = typeof elm === 'string' ? document.querySelector(elm) : elm
-  let state
-  let oldVNode
-  const update = (newState: S) => {
-    state = newState
-    render()
-  }
-  const render = () => {
-    const newVNode = view(state, update)
-    updateElement(node, newVNode, oldVNode)
-    oldVNode = newVNode
-  }
-  render()
-  return update
-}
-
-export default app
