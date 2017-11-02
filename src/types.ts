@@ -9,6 +9,7 @@ export interface Component<S> {
   onMount?: Lifecycle<S>
   onUnmount?: Lifecycle<S>
   onUpdate?: Lifecycle<S>
+  _update?: Updater<S>
 }
 export type ValidVNode<S=any> = Component<S> | VNode | string | number
 export type Updater<S> = (state: S) => S

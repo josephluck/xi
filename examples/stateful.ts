@@ -1,4 +1,4 @@
-import { h, View, app, Update } from '../src'
+import { h, View, app, Update, Component } from '../src'
 
 export type State = {
   title: string
@@ -20,17 +20,17 @@ const button = (text: string, onclick: () => any) => {
   return h('button', { onclick }, text)
 }
 
-const counter = (name: string) => {
+const counter = (name: string): Component<{ count: number }> => {
   return {
     state: { count: 0 },
     onMount(state, update) {
-      console.log(state, update)
+      console.log('onMount')
     },
     onUnmount(state, update) {
-      console.log(state, update)
+      console.log('onUnmount')
     },
     onUpdate(state, update) {
-      console.log(state, update)
+      // console.log('onUpdate')
     },
     render(state, update) {
       return h('div', { id: `counter-${name}`, style: 'margin: 10px' }, [
@@ -43,16 +43,16 @@ const counter = (name: string) => {
   }
 }
 
-const conditionalCounter = {
+const conditionalCounter: Component<{ showing: boolean }> = {
   state: { showing: false },
   onMount(state, update) {
-    console.log(state, update)
+    console.log('onMount')
   },
   onUnmount(state, update) {
-    console.log(state, update)
+    console.log('onUnmount')
   },
   onUpdate(state, update) {
-    console.log(state, update)
+    // console.log('onUpdate')
   },
   render(state, update) {
     return h('div', { id: 'conditional-counter', style: 'margin: 10px; border: solid 1px' }, [

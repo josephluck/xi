@@ -1,7 +1,7 @@
 import * as attributes from './attributes'
 import * as Types from './types'
 import * as utils from './utils'
-export { View, Update } from './types'
+export { View, Update, Component } from './types'
 
 export function h(type: keyof HTMLElementTagNameMap, props?: any, children?: Types.ValidVNode | Types.ValidVNode[]): Types.VNode {
   return { type, props, children }
@@ -25,11 +25,15 @@ function createComponent(
     const oldChild = $parent.childNodes[index]
     const newChild = createElement(component.render(state, update))
     if (oldChild) {
+      // Perhaps the ability to prevent this from happening from the component
+      // level would be good... something like 'shouldRender()'
+      // would allow for things like 3rd party libraries
       $parent.replaceChild(newChild, oldChild)
     } else {
       $parent.appendChild(newChild)
     }
   }
+  component._update = update
   return createElement(component.render(state, update))
 }
 
@@ -37,6 +41,7 @@ function createElement(
   node: Types.ValidVNode,
   $parent?: HTMLElement,
   index?: number,
+  create: boolean = false
 ): HTMLElement | Text {
   if (typeof node === 'string' || typeof node === 'number') {
     return document.createTextNode(node.toString())
@@ -46,9 +51,12 @@ function createElement(
     const children = vNode.children instanceof Array ? vNode.children : [vNode.children]
     attributes.addAttributes($parent, vNode.props)
     attributes.addEventListeners($parent, vNode.props)
-    children.filter(utils.isPresent).map((child, index) => {
+    children.filter(utils.isPresent).map((child, i) => {
+      if (create) {
+        lifecycle('onMount', child)
+      }
       return utils.isComponent(child)
-        ? createComponent($parent, child as Types.Component<any>, index)
+        ? createComponent($parent, child as Types.Component<any>, i)
         : createElement(child)
     }).forEach($parent.appendChild.bind($parent))
     return $parent
@@ -61,6 +69,15 @@ function hasComponentChanged(newComponent: Types.ValidVNode, oldComponent: Types
   return utils.isComponent(newComponent) && utils.isComponent(oldComponent)
 }
 
+const lifecycle = (
+  method: 'onMount' | 'onUpdate' | 'onUnmount',
+  vNode: Types.ValidVNode,
+) => {
+  if (utils.isComponent(vNode) && (vNode as Types.Component<any>)[method]) {
+    (vNode as Types.Component<any>)[method]((vNode as Types.Component<any>).state, (vNode as Types.Component<any>)._update)
+  }
+}
+
 function updateElement(
   $parent: HTMLElement,
   newVNode: Types.ValidVNode,
@@ -69,13 +86,17 @@ function updateElement(
 ) {
   const child = $parent.childNodes[index] as HTMLElement
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
-    $parent.appendChild(createElement(newVNode, $parent as HTMLElement, index))
+    lifecycle('onMount', newVNode)
+    $parent.appendChild(createElement(newVNode, $parent as HTMLElement, index, true))
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
+    lifecycle('onUnmount', oldVNode)
     $parent.removeChild(child)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
+    lifecycle('onUpdate', newVNode)
     $parent.replaceChild(createElement(newVNode), child)
   } else if (hasComponentChanged(newVNode, oldVNode)) {
     (newVNode as Types.Component<any>).state = (oldVNode as Types.Component<any>).state
+    lifecycle('onUpdate', newVNode)
     $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), child)
   } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
