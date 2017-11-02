@@ -23,13 +23,22 @@ const button = (text: string, onclick: () => any) => {
 const counter = (name: string): Component<{ count: number }> => {
   return {
     state: { count: 0 },
-    onMount(state, update) {
-      console.log('onMount')
+    onBeforeMount(state, update) {
+      console.log('onBeforeMount')
     },
-    onUnmount(state, update) {
-      console.log('onUnmount')
+    onAfterMount(state, update) {
+      console.log('onAfterMount')
     },
-    onUpdate(state, update) {
+    onBeforeUnmount(state, update) {
+      console.log('onBeforeUnmount')
+    },
+    onAfterUnmount(state, update) {
+      console.log('onAfterUnmount')
+    },
+    onBeforeUpdate(state, update) {
+      // console.log('onUpdate')
+    },
+    onAfterUpdate(state, update) {
       // console.log('onUpdate')
     },
     render(state, update) {
@@ -45,13 +54,22 @@ const counter = (name: string): Component<{ count: number }> => {
 
 const conditionalCounter: Component<{ showing: boolean }> = {
   state: { showing: false },
-  onMount(state, update) {
-    console.log('onMount')
+  onBeforeMount(state, update) {
+    console.log('onBeforeMount')
   },
-  onUnmount(state, update) {
-    console.log('onUnmount')
+  onAfterMount(state, update) {
+    console.log('onAfterMount')
   },
-  onUpdate(state, update) {
+  onBeforeUnmount(state, update) {
+    console.log('onBeforeUnmount')
+  },
+  onAfterUnmount(state, update) {
+    console.log('onAfterUnmount')
+  },
+  onBeforeUpdate(state, update) {
+    // console.log('onUpdate')
+  },
+  onAfterUpdate(state, update) {
     // console.log('onUpdate')
   },
   render(state, update) {

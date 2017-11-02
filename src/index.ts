@@ -7,7 +7,6 @@ export function h(type: keyof HTMLElementTagNameMap, props?: any, children?: Typ
   return { type, props, children }
 }
 
-// Could probably marry this with the main `app` function below so that `app` takes a component (made with this fn)
 function createComponent(
   $parent: HTMLElement,
   component: Types.Component<any>,
@@ -70,7 +69,7 @@ function hasComponentChanged(newComponent: Types.ValidVNode, oldComponent: Types
 }
 
 const lifecycle = (
-  method: 'onMount' | 'onUpdate' | 'onUnmount',
+  method: Types.ValidLifecycleMethods,
   vNode: Types.ValidVNode,
 ) => {
   if (utils.isComponent(vNode) && (vNode as Types.Component<any>)[method]) {
@@ -86,18 +85,22 @@ function updateElement(
 ) {
   const child = $parent.childNodes[index] as HTMLElement
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
-    lifecycle('onMount', newVNode)
+    lifecycle('onBeforeMount', newVNode)
     $parent.appendChild(createElement(newVNode, $parent as HTMLElement, index, true))
+    lifecycle('onAfterMount', newVNode)
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
-    lifecycle('onUnmount', oldVNode)
+    lifecycle('onBeforeUnmount', oldVNode)
     $parent.removeChild(child)
+    lifecycle('onAfterUnmount', oldVNode)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
-    lifecycle('onUpdate', newVNode)
+    lifecycle('onBeforeUpdate', newVNode)
     $parent.replaceChild(createElement(newVNode), child)
+    lifecycle('onAfterUpdate', newVNode)
   } else if (hasComponentChanged(newVNode, oldVNode)) {
     (newVNode as Types.Component<any>).state = (oldVNode as Types.Component<any>).state
-    lifecycle('onUpdate', newVNode)
+    lifecycle('onBeforeUpdate', newVNode)
     $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), child)
+    lifecycle('onAfterUpdate', newVNode)
   } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
     const oVNode = oldVNode as Types.VNode
