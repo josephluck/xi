@@ -13,7 +13,7 @@ function createComponent(
   component: Types.Component<any>,
   index: number = 0,
 ): HTMLElement | Text {
-  let state = component.state // This will need to persist when component is updated due to props
+  let state = component.state
   const update = (updater: Types.Updater<any>) => {
     state = typeof updater === 'function'
       ? updater(state)
@@ -53,7 +53,6 @@ function createElement(
     }).forEach($parent.appendChild.bind($parent))
     return $parent
   } else if (utils.isComponent(node) && $parent) {
-    // What about updating a component (i.e. persisting state?)
     return createComponent($parent, node as Types.Component<any>, index)
   }
 }
@@ -63,12 +62,12 @@ function hasComponentChanged(newComponent: Types.ValidVNode, oldComponent: Types
 }
 
 function updateElement(
-  $parent: HTMLElement | Node,
+  $parent: HTMLElement,
   newVNode: Types.ValidVNode,
   oldVNode?: Types.ValidVNode,
   index: number = 0,
 ) {
-  const child = $parent.childNodes[index]
+  const child = $parent.childNodes[index] as HTMLElement
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
     $parent.appendChild(createElement(newVNode, $parent as HTMLElement, index))
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
@@ -76,16 +75,15 @@ function updateElement(
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
     $parent.replaceChild(createElement(newVNode), child)
   } else if (hasComponentChanged(newVNode, oldVNode)) {
-    console.log('should persist state: ', (newVNode as Types.Component<any>).state)
+    (newVNode as Types.Component<any>).state = (oldVNode as Types.Component<any>).state
     $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), child)
   } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
     const oVNode = oldVNode as Types.VNode
     const nVNodeChildren = nVNode.children instanceof Array ? nVNode.children : [nVNode.children]
     const oVNodeChildren = oVNode.children instanceof Array ? oVNode.children : [oVNode.children]
-    const hChild = child as HTMLElement
-    attributes.updateAttributes(hChild, nVNode.props, oVNode.props)
-    attributes.updateEventListeners(hChild, nVNode.props, oVNode.props)
+    attributes.updateAttributes(child, nVNode.props, oVNode.props)
+    attributes.updateEventListeners(child, nVNode.props, oVNode.props)
     utils.getLargestArray(nVNodeChildren, oVNodeChildren)
       .forEach((c, i) => {
         updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i)
