@@ -35,11 +35,11 @@ const counter = (name: string): Component<{ count: number }> => {
     onAfterUnmount(state, update) {
       console.log('onAfterUnmount')
     },
-    onBeforeUpdate(state, update) {
-      // console.log('onUpdate')
+    onBeforeReplace(state, update) {
+      console.log('onBeforeReplace')
     },
-    onAfterUpdate(state, update) {
-      // console.log('onUpdate')
+    onAfterReplace(state, update) {
+      console.log('onAfterReplace')
     },
     render(state, update) {
       return h('div', { id: `counter-${name}`, style: 'margin: 10px' }, [
@@ -57,20 +57,25 @@ const conditionalCounter: Component<{ showing: boolean }> = {
   onBeforeMount(state, update) {
     console.log('onBeforeMount')
   },
-  onAfterMount(state, update) {
+  onAfterMount(node, state, update) {
+    node.innerHTML = '<span>Whoospy</span>'
     console.log('onAfterMount')
   },
-  onBeforeUnmount(state, update) {
+  onBeforeUnmount(node, state, update) {
+    debugger
     console.log('onBeforeUnmount')
   },
   onAfterUnmount(state, update) {
     console.log('onAfterUnmount')
   },
-  onBeforeUpdate(state, update) {
-    // console.log('onUpdate')
+  onBeforeReplace(state, update) {
+    console.log('onBeforeReplace')
   },
-  onAfterUpdate(state, update) {
-    // console.log('onUpdate')
+  onAfterReplace(state, update) {
+    console.log('onAfterReplace')
+  },
+  shouldRender() {
+    return false
   },
   render(state, update) {
     return h('div', { id: 'conditional-counter', style: 'margin: 10px; border: solid 1px' }, [

@@ -50,14 +50,26 @@ function createElement(
     const children = vNode.children instanceof Array ? vNode.children : [vNode.children]
     attributes.addAttributes($parent, vNode.props)
     attributes.addEventListeners($parent, vNode.props)
-    children.filter(utils.isPresent).map((child, i) => {
-      if (create) {
-        lifecycle('onMount', child)
-      }
-      return utils.isComponent(child)
-        ? createComponent($parent, child as Types.Component<any>, i)
-        : createElement(child)
-    }).forEach($parent.appendChild.bind($parent))
+    children
+      .filter(utils.isPresent)
+      .map((child, i) => {
+        if (create) {
+          lifecycle('onBeforeMount', child)
+        }
+        if (utils.isComponent(child)) {
+          if ((child as Types.Component<any>).shouldRender ? (child as Types.Component<any>).shouldRender() : true) {
+            return createComponent($parent, child as Types.Component<any>, i)
+          } else {
+            return document.createTextNode('')
+          }
+        } else {
+          return createElement(child)
+        }
+      })
+      .forEach($parent.appendChild.bind($parent))
+    children
+      .filter(utils.isPresent)
+      .forEach((child, i) => create ? lifecycle('onAfterMount', child, $parent.childNodes[i] as HTMLElement) : null)
     return $parent
   } else if (utils.isComponent(node) && $parent) {
     return createComponent($parent, node as Types.Component<any>, index)
@@ -65,15 +77,21 @@ function createElement(
 }
 
 function hasComponentChanged(newComponent: Types.ValidVNode, oldComponent: Types.ValidVNode): boolean {
+  // Also check newComponent.shouldUpdate()
   return utils.isComponent(newComponent) && utils.isComponent(oldComponent)
 }
 
 const lifecycle = (
   method: Types.ValidLifecycleMethods,
   vNode: Types.ValidVNode,
+  $node?: HTMLElement,
 ) => {
   if (utils.isComponent(vNode) && (vNode as Types.Component<any>)[method]) {
-    (vNode as Types.Component<any>)[method]((vNode as Types.Component<any>).state, (vNode as Types.Component<any>)._update)
+    if (method === 'onAfterMount' || method === 'onBeforeUnmount') {
+      (vNode as Types.Component<any>)[method]($node, (vNode as Types.Component<any>).state, (vNode as Types.Component<any>)._update)
+    } else {
+      (vNode as Types.Component<any>)[method]((vNode as Types.Component<any>).state, (vNode as Types.Component<any>)._update)
+    }
   }
 }
 
@@ -86,21 +104,22 @@ function updateElement(
   const child = $parent.childNodes[index] as HTMLElement
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
     lifecycle('onBeforeMount', newVNode)
-    $parent.appendChild(createElement(newVNode, $parent as HTMLElement, index, true))
-    lifecycle('onAfterMount', newVNode)
+    const toAppend = createElement(newVNode, $parent as HTMLElement, index, true)
+    $parent.appendChild(toAppend)
+    lifecycle('onAfterMount', newVNode, toAppend as HTMLElement)
   } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
-    lifecycle('onBeforeUnmount', oldVNode)
+    lifecycle('onBeforeUnmount', oldVNode, child)
     $parent.removeChild(child)
     lifecycle('onAfterUnmount', oldVNode)
   } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
-    lifecycle('onBeforeUpdate', newVNode)
+    lifecycle('onBeforeReplace', newVNode)
     $parent.replaceChild(createElement(newVNode), child)
-    lifecycle('onAfterUpdate', newVNode)
+    lifecycle('onAfterReplace', newVNode)
   } else if (hasComponentChanged(newVNode, oldVNode)) {
     (newVNode as Types.Component<any>).state = (oldVNode as Types.Component<any>).state
-    lifecycle('onBeforeUpdate', newVNode)
+    lifecycle('onBeforeReplace', newVNode)
     $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), child)
-    lifecycle('onAfterUpdate', newVNode)
+    lifecycle('onAfterReplace', newVNode)
   } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
     const oVNode = oldVNode as Types.VNode
