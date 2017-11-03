@@ -38,7 +38,7 @@ function createComponent(
   component._update = update
   return utils.shouldComponentRender(component)
     ? createElement(component.render(state, update))
-    : document.createTextNode('') // Should return null here...
+    : document.createTextNode('') // Should return null here... this seems hacky
 }
 
 function createElement(
@@ -86,7 +86,7 @@ function updateElement(
 ) {
   const $child = $parent.childNodes[index] as HTMLElement
   const vNodeRemoved = !utils.isPresent(newVNode) && utils.isPresent($child)
-  const shouldComponentUnmount = false // TODO: make this wurk
+  const shouldComponentUnmount = utils.isComponent(newVNode) && utils.shouldComponentUnmount(newVNode)
 
   if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode) && utils.shouldComponentRender(newVNode)) {
     utils.lifecycle('onBeforeMount', newVNode)
@@ -95,9 +95,13 @@ function updateElement(
     utils.lifecycle('onAfterMount', newVNode, toAppend as HTMLElement)
   }
 
-  else if (vNodeRemoved || shouldComponentUnmount) {
-    utils.lifecycle('onBeforeUnmount', oldVNode, $child)
+  else if (vNodeRemoved) {
     $parent.removeChild($child)
+  }
+
+  else if (shouldComponentUnmount) {
+    utils.lifecycle('onBeforeUnmount', oldVNode, $child)
+    $parent.replaceChild(document.createTextNode(''), $child) // This seems hacky to me...
     utils.lifecycle('onAfterUnmount', oldVNode)
   }
 
