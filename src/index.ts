@@ -21,77 +21,60 @@ function createComponent(
     render()
   }
   function render() {
-    const oldChild = $parent.childNodes[index]
-    const newChild = createElement(component.render(state, update))
-    if (oldChild) {
-      // Perhaps the ability to prevent this from happening from the component
-      // level would be good... something like 'shouldRender()'
-      // would allow for things like 3rd party libraries
-      $parent.replaceChild(newChild, oldChild)
-    } else {
-      $parent.appendChild(newChild)
+    const $oldNode = $parent.childNodes[index]
+    const $newNode = createElement(component.render(state, update))
+    if (utils.shouldComponentRender(component)) {
+      if ($oldNode) {
+        utils.lifecycle('onBeforeReplace', component)
+        $parent.replaceChild($newNode, $oldNode)
+        utils.lifecycle('onAfterReplace', component)
+      } else {
+        utils.lifecycle('onBeforeMount', component)
+        $parent.appendChild($newNode)
+        utils.lifecycle('onAfterMount', component)
+      }
     }
   }
   component._update = update
-  return createElement(component.render(state, update))
+  return utils.shouldComponentRender(component)
+    ? createElement(component.render(state, update))
+    : document.createTextNode('') // Should return null here...
 }
 
 function createElement(
-  node: Types.ValidVNode,
+  validVNode: Types.ValidVNode,
   $parent?: HTMLElement,
   index?: number,
   create: boolean = false
 ): HTMLElement | Text {
-  if (typeof node === 'string' || typeof node === 'number') {
-    return document.createTextNode(node.toString())
-  } else if (utils.isVNode(node)) {
-    const vNode = node as Types.VNode
+  if (typeof validVNode === 'string' || typeof validVNode === 'number') {
+    return document.createTextNode(validVNode.toString())
+  } else if (utils.isVNode(validVNode)) {
+    const vNode = validVNode as Types.VNode
     const $parent = document.createElement(vNode.type)
-    const children = vNode.children instanceof Array ? vNode.children : [vNode.children]
+    const children = (vNode.children instanceof Array ? vNode.children : [vNode.children])
+      .filter(utils.isPresent)
     attributes.addAttributes($parent, vNode.props)
     attributes.addEventListeners($parent, vNode.props)
-    children
-      .filter(utils.isPresent)
-      .map((child, i) => {
-        if (create) {
-          lifecycle('onBeforeMount', child)
-        }
-        if (utils.isComponent(child)) {
-          if ((child as Types.Component<any>).shouldRender ? (child as Types.Component<any>).shouldRender() : true) {
-            return createComponent($parent, child as Types.Component<any>, i)
-          } else {
-            return document.createTextNode('')
-          }
-        } else {
-          return createElement(child)
-        }
-      })
-      .forEach($parent.appendChild.bind($parent))
-    children
-      .filter(utils.isPresent)
-      .forEach((child, i) => create ? lifecycle('onAfterMount', child, $parent.childNodes[i] as HTMLElement) : null)
-    return $parent
-  } else if (utils.isComponent(node) && $parent) {
-    return createComponent($parent, node as Types.Component<any>, index)
-  }
-}
-
-function hasComponentChanged(newComponent: Types.ValidVNode, oldComponent: Types.ValidVNode): boolean {
-  // Also check newComponent.shouldUpdate()
-  return utils.isComponent(newComponent) && utils.isComponent(oldComponent)
-}
-
-const lifecycle = (
-  method: Types.ValidLifecycleMethods,
-  vNode: Types.ValidVNode,
-  $node?: HTMLElement,
-) => {
-  if (utils.isComponent(vNode) && (vNode as Types.Component<any>)[method]) {
-    if (method === 'onAfterMount' || method === 'onBeforeUnmount') {
-      (vNode as Types.Component<any>)[method]($node, (vNode as Types.Component<any>).state, (vNode as Types.Component<any>)._update)
-    } else {
-      (vNode as Types.Component<any>)[method]((vNode as Types.Component<any>).state, (vNode as Types.Component<any>)._update)
+    if (create) {
+      children
+        .filter(utils.shouldComponentRender)
+        .forEach(child => utils.lifecycle('onBeforeMount', child))
     }
+    children
+      .map((child, i) => utils.isComponent(child)
+        ? createComponent($parent, child as Types.Component<any>, i)
+        : createElement(child)
+      )
+      .forEach($parent.appendChild.bind($parent))
+    if (create) {
+      children
+        .filter(utils.shouldComponentRender)
+        .forEach((child, i) => utils.lifecycle('onAfterMount', child, $parent.childNodes[i] as HTMLElement))
+    }
+    return $parent
+  } else if (utils.isComponent(validVNode) && $parent) {
+    return createComponent($parent, validVNode as Types.Component<any>, index)
   }
 }
 
@@ -101,36 +84,49 @@ function updateElement(
   oldVNode?: Types.ValidVNode,
   index: number = 0,
 ) {
-  const child = $parent.childNodes[index] as HTMLElement
-  if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode)) {
-    lifecycle('onBeforeMount', newVNode)
+  const $child = $parent.childNodes[index] as HTMLElement
+  const vNodeRemoved = !utils.isPresent(newVNode) && utils.isPresent($child)
+  const shouldComponentUnmount = false // TODO: make this wurk
+
+  if (!utils.isPresent(oldVNode) && utils.isPresent(newVNode) && utils.shouldComponentRender(newVNode)) {
+    utils.lifecycle('onBeforeMount', newVNode)
     const toAppend = createElement(newVNode, $parent as HTMLElement, index, true)
     $parent.appendChild(toAppend)
-    lifecycle('onAfterMount', newVNode, toAppend as HTMLElement)
-  } else if (!utils.isPresent(newVNode) && utils.isPresent(child)) {
-    lifecycle('onBeforeUnmount', oldVNode, child)
-    $parent.removeChild(child)
-    lifecycle('onAfterUnmount', oldVNode)
-  } else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
-    lifecycle('onBeforeReplace', newVNode)
-    $parent.replaceChild(createElement(newVNode), child)
-    lifecycle('onAfterReplace', newVNode)
-  } else if (hasComponentChanged(newVNode, oldVNode)) {
+    utils.lifecycle('onAfterMount', newVNode, toAppend as HTMLElement)
+  }
+
+  else if (vNodeRemoved || shouldComponentUnmount) {
+    utils.lifecycle('onBeforeUnmount', oldVNode, $child)
+    $parent.removeChild($child)
+    utils.lifecycle('onAfterUnmount', oldVNode)
+  }
+
+  else if (utils.hasVNodeChanged(newVNode, oldVNode)) {
+    utils.lifecycle('onBeforeReplace', newVNode)
+    $parent.replaceChild(createElement(newVNode), $child)
+    utils.lifecycle('onAfterReplace', newVNode)
+  }
+
+  else if (utils.hasComponentChanged(newVNode, oldVNode)) {
     (newVNode as Types.Component<any>).state = (oldVNode as Types.Component<any>).state
-    lifecycle('onBeforeReplace', newVNode)
-    $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), child)
-    lifecycle('onAfterReplace', newVNode)
-  } else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
+    utils.lifecycle('onBeforeReplace', newVNode)
+    $parent.replaceChild(createElement(newVNode, $parent as HTMLElement, index), $child)
+    utils.lifecycle('onAfterReplace', newVNode)
+  }
+
+  else if (utils.isVNode(newVNode) && utils.isVNode(oldVNode)) {
     const nVNode = newVNode as Types.VNode
     const oVNode = oldVNode as Types.VNode
-    const nVNodeChildren = nVNode.children instanceof Array ? nVNode.children : [nVNode.children]
-    const oVNodeChildren = oVNode.children instanceof Array ? oVNode.children : [oVNode.children]
-    attributes.updateAttributes(child, nVNode.props, oVNode.props)
-    attributes.updateEventListeners(child, nVNode.props, oVNode.props)
+    const nVNodeChildren = nVNode.children instanceof Array
+      ? nVNode.children
+      : [nVNode.children]
+    const oVNodeChildren = oVNode.children instanceof Array
+      ? oVNode.children
+      : [oVNode.children]
+    attributes.updateAttributes($child, nVNode.props, oVNode.props)
+    attributes.updateEventListeners($child, nVNode.props, oVNode.props)
     utils.getLargestArray(nVNodeChildren, oVNodeChildren)
-      .forEach((c, i) => {
-        updateElement(child, nVNodeChildren[i], oVNodeChildren[i], i)
-      })
+      .forEach((c, i) => updateElement($child, nVNodeChildren[i], oVNodeChildren[i], i))
   }
 }
 
