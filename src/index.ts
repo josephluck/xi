@@ -38,7 +38,7 @@ function createComponent(
   component._update = update
   return utils.shouldComponentRender(component)
     ? createElement(component.render(state, update))
-    : document.createTextNode('') // Should return null here... this seems hacky
+    : document.createComment(' Component Placeholder ') as any // Should return null here... this seems hacky
 }
 
 function createElement(
@@ -101,7 +101,7 @@ function updateElement(
 
   else if (shouldComponentUnmount) {
     utils.lifecycle('onBeforeUnmount', oldVNode, $child)
-    $parent.replaceChild(document.createTextNode(''), $child) // This seems hacky to me...
+    $parent.replaceChild(document.createComment(' Component Placeholder '), $child) // This seems hacky to me...
     utils.lifecycle('onAfterUnmount', oldVNode)
   }
 
